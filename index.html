@@ -1,9 +1,15 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" translate="no">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="google" content="notranslate">
 <title>Stage Time Toolkit</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 <style>
     /* =========================================
        共通・ベーススタイル
@@ -17,6 +23,8 @@
         --sw-danger: #ff5252;
         --bt-accent: #e74c3c; /* バータイマーの色 */
     }
+    * { box-sizing: border-box; }
+    
     body {
         background-color: var(--bg-color);
         color: var(--text-color);
@@ -25,11 +33,9 @@
         padding: 0;
         display: flex;
         flex-direction: column;
-        min-height: 100vh;
+        min-height: 100dvh;
     }
-    button {
-        font-family: inherit;
-    }
+    button { font-family: inherit; }
 
     /* --- タブメニュー --- */
     .tab-bar {
@@ -41,14 +47,8 @@
         z-index: 100;
     }
     .tab-btn {
-        flex: 1;
-        padding: 15px;
-        background: none;
-        border: none;
-        color: #888;
-        font-size: 1.1rem;
-        cursor: pointer;
-        transition: 0.2s;
+        flex: 1; padding: 15px; background: none; border: none;
+        color: #888; font-size: 1.1rem; cursor: pointer; transition: 0.2s;
         border-bottom: 3px solid transparent;
     }
     .tab-btn:hover { background-color: rgba(255,255,255,0.05); }
@@ -58,19 +58,11 @@
 
     /* --- アプリコンテナ --- */
     .app-container {
-        display: none;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-        width: 100%;
-        max-width: 800px;
-        margin-inline: auto;
-        box-sizing: border-box;
-        flex-grow: 1;
-        animation: fadeIn 0.3s ease;
+        display: none; flex-direction: column; align-items: center;
+        padding: 20px; width: 100%; max-width: 800px; margin-inline: auto;
+        flex-grow: 1; animation: fadeIn 0.3s ease;
     }
     .app-container.active { display: flex; }
-
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     /* --- 共通コンポーネント (消灯防止ボタン等) --- */
@@ -103,11 +95,11 @@
     #sw-base-time-input { background-color: transparent; color: var(--sw-accent); border: none; font-family: monospace; font-size: 1.1rem; outline: none; }
     #sw-base-time-input:disabled { color: #555; cursor: not-allowed; }
 
-    .sw-lap-container { width: 100%; background-color: var(--panel-bg); border-radius: 8px; padding: 15px; box-sizing: border-box; }
+    .sw-lap-container { width: 100%; background-color: var(--panel-bg); border-radius: 8px; padding: 15px; }
     .sw-lap-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
     .sw-lap-list { list-style: none; padding: 0; margin: 0; max-height: 40vh; overflow-y: auto; }
     .sw-lap-item { display: grid; grid-template-columns: 50px 90px 90px 1fr; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--border-color); }
-    .sw-lap-item input { background-color: #2a2a2a; color: white; border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
+    .sw-lap-item input { background-color: #2a2a2a; color: white; border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; width: 100%; }
 
 
     /* =========================================
@@ -118,24 +110,36 @@
 
     .bt-header { width: 100%; max-width: 600px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #888; }
     .bt-countdown { font-size: 5rem; font-weight: bold; font-variant-numeric: tabular-nums; margin: 10px 0; color: white; }
-    .bt-status { font-size: 1.2rem; color: #aaa; margin-bottom: 20px; }
+    .bt-status { font-size: 1.2rem; color: #aaa; margin-bottom: 20px; text-align: center;}
 
     .bt-progress-container { width: 100%; max-width: 600px; height: 40px; background: #333; border-radius: 20px; overflow: hidden; margin-bottom: 30px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
     #bt-progress-bar { width: 100%; height: 100%; background: var(--bt-accent); transition: width 0.5s linear; }
 
-    .bt-settings { width: 100%; max-width: 500px; background: #222; padding: 20px; border-radius: 10px; box-sizing: border-box; }
+    .bt-settings { width: 100%; max-width: 500px; background: #222; padding: 20px; border-radius: 10px; }
     .bt-controls-top { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; }
     
-    .bt-time-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-    .bt-time-row input[type="time"] { flex: 1; padding: 10px; border-radius: 5px; border: none; font-size: 1.2rem; background: #333; color: white; color-scheme: dark; }
+    .bt-time-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; width: 100%; }
     
-    .bt-settings button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; transition: 0.2s; }
+    /* 復元：flatpickr用テキストインプット */
+    .bt-time-row input[type="text"].target-time { 
+        flex: 1; padding: 12px; border-radius: 5px; border: none; font-size: 18px; 
+        background: #333; color: white; text-align: center; cursor: pointer; width: 100%; 
+    }
+    
+    .bt-settings button { padding: 12px 15px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; transition: 0.2s; font-size: 16px; }
     .bt-settings button:hover { opacity: 0.8; }
-    .bt-btn-add { background: #555; color: white; width: 100%; margin-bottom: 15px; }
-    .bt-btn-del { background: #c0392b; color: white; padding: 10px; }
+    
+    .bt-btn-del { background: #c0392b; color: white; padding: 12px; flex-shrink: 0; }
     .bt-btn-action { background: #3498db; color: white; flex: 1; }
     .bt-btn-clear { background: #7f8c8d; color: white; }
-    .bt-start-btn { background: #27ae60; width: 100%; font-size: 1.5rem; padding: 15px; color: white; }
+    .bt-start-btn { background: #27ae60; width: 100%; font-size: 1.5rem; padding: 15px; color: white; margin-top: 5px;}
+    
+    /* 復元：追加コントロールエリア */
+    .bt-add-controls { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
+    .bt-btn-add { background: #555; color: white; flex: 1; margin: 0; }
+    .bt-rel-time-wrapper { display: flex; gap: 5px; flex: 1.5; }
+    .bt-rel-time-input { width: 70px; padding: 12px; border-radius: 5px; border: none; font-size: 16px; background: #333; color: white; text-align: center; }
+    .bt-btn-rel { background: #9b59b6; color: white; flex: 1; margin: 0; }
     
     .bt-active-row input { color: var(--bt-accent); font-weight: bold; }
 
@@ -200,14 +204,21 @@
 
         <div class="bt-settings">
             <div class="bt-controls-top">
-                <button class="bt-btn-action" id="bt-btn-start-now">現在時刻でスタート</button>
-                <button class="bt-btn-clear" id="bt-btn-clear-all">すべて消去</button>
+                <button class="bt-btn-action" id="bt-btn-start-now">現在で開始</button>
+                <button class="bt-btn-clear" id="bt-btn-clear-all">消去</button>
             </div>
 
             <div id="bt-timeInputs"></div>
             
-            <button class="bt-btn-add" id="bt-btn-add-time">＋時刻を追加</button>
-            <button class="bt-start-btn" id="bt-mainBtn">タイマースタート</button>
+            <div class="bt-add-controls">
+                <button class="bt-btn-add" id="bt-btn-add-empty">＋空欄</button>
+                <div class="bt-rel-time-wrapper">
+                    <input type="number" id="bt-relMins" class="bt-rel-time-input" value="15" min="1">
+                    <button class="bt-btn-rel" id="bt-btn-add-rel">分後を追加</button>
+                </div>
+            </div>
+            
+            <button class="bt-start-btn" id="bt-mainBtn">スタート</button>
         </div>
     </div>
 
@@ -217,36 +228,27 @@
 // ==========================================
 const tabBtns = document.querySelectorAll('.tab-btn');
 
-// 1. ページ読み込み時に保存されたタブを復元
 const savedTab = localStorage.getItem('stageActiveTab');
 if (savedTab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.app-container').forEach(c => c.classList.remove('active'));
-    
     const targetBtn = document.querySelector(`.tab-btn[data-target="${savedTab}"]`);
     if (targetBtn) {
         targetBtn.classList.add('active');
         document.getElementById(savedTab).classList.add('active');
     } else {
-        // 万が一見つからなければ1つ目（ストップウォッチ）を表示
         tabBtns[0].classList.add('active');
         document.getElementById(tabBtns[0].dataset.target).classList.add('active');
     }
 }
 
-// 2. タブクリック時の処理と状態保存
 tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-        // 全てのタブとコンテナをリセット
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.app-container').forEach(c => c.classList.remove('active'));
-        
-        // 選択されたものをアクティブ化
         btn.classList.add('active');
         const targetId = btn.dataset.target;
         document.getElementById(targetId).classList.add('active');
-
-        // ★選択されたタブのIDを保存★
         localStorage.setItem('stageActiveTab', targetId);
     });
 });
@@ -256,22 +258,15 @@ tabBtns.forEach(btn => {
 // アプリ1: ストップウォッチ ロジック
 // ==========================================
 (() => {
-    let state = {
-        isRunning: false, startTime: 0, accumulatedTime: 0, baseShowTime: null, laps: []
-    };
+    let state = { isRunning: false, startTime: 0, accumulatedTime: 0, baseShowTime: null, laps: [] };
     let animationFrameId = null;
     let wakeLock = null;
 
     const els = {
-        timeDisplay: document.getElementById('sw-time-display'),
-        lapList: document.getElementById('sw-lap-list'),
-        btnStart: document.getElementById('sw-btn-start'),
-        baseTimeInput: document.getElementById('sw-base-time-input'),
-        btnWakeLock: document.getElementById('sw-btn-wakelock'),
-        wakeLockDot: document.getElementById('sw-wake-lock-dot'),
-        btnLap: document.getElementById('sw-btn-lap'),
-        btnReset: document.getElementById('sw-btn-reset'),
-        btnExport: document.getElementById('sw-btn-export')
+        timeDisplay: document.getElementById('sw-time-display'), lapList: document.getElementById('sw-lap-list'),
+        btnStart: document.getElementById('sw-btn-start'), baseTimeInput: document.getElementById('sw-base-time-input'),
+        btnWakeLock: document.getElementById('sw-btn-wakelock'), wakeLockDot: document.getElementById('sw-wake-lock-dot'),
+        btnLap: document.getElementById('sw-btn-lap'), btnReset: document.getElementById('sw-btn-reset'), btnExport: document.getElementById('sw-btn-export')
     };
 
     function init() {
@@ -281,16 +276,12 @@ tabBtns.forEach(btn => {
             updateBaseTimeDisplay();
             if (state.isRunning) {
                 requestAnimationFrame(updateTime);
-                els.btnStart.textContent = "Stop";
-                els.btnStart.classList.remove("primary");
+                els.btnStart.textContent = "Stop"; els.btnStart.classList.remove("primary");
                 requestWakeLock();
-            } else {
-                renderTime(state.accumulatedTime);
-            }
+            } else { renderTime(state.accumulatedTime); }
             renderLaps();
         }
     }
-
     function saveState() { localStorage.setItem('stageTimerState', JSON.stringify(state)); }
 
     function formatTime(ms) {
@@ -319,8 +310,7 @@ tabBtns.forEach(btn => {
             els.baseTimeInput.value = formatRealTime(new Date(state.baseShowTime));
             els.baseTimeInput.disabled = false;
         } else {
-            els.baseTimeInput.value = "";
-            els.baseTimeInput.disabled = true;
+            els.baseTimeInput.value = ""; els.baseTimeInput.disabled = true;
         }
     }
 
@@ -339,20 +329,15 @@ tabBtns.forEach(btn => {
         if (!('wakeLock' in navigator) || wakeLock !== null) return;
         try {
             wakeLock = await navigator.wakeLock.request('screen');
-            els.wakeLockDot.classList.add('active');
-            els.btnWakeLock.classList.add('active-lock');
+            els.wakeLockDot.classList.add('active'); els.btnWakeLock.classList.add('active-lock');
             wakeLock.addEventListener('release', () => {
-                els.wakeLockDot.classList.remove('active');
-                els.btnWakeLock.classList.remove('active-lock');
+                els.wakeLockDot.classList.remove('active'); els.btnWakeLock.classList.remove('active-lock');
                 wakeLock = null;
             });
         } catch (err) { console.warn('SW Wake Lock error:', err); }
     }
 
-    function releaseWakeLock() {
-        if (wakeLock !== null) { wakeLock.release(); wakeLock = null; }
-    }
-
+    function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release(); wakeLock = null; } }
     els.btnWakeLock.addEventListener('click', () => wakeLock !== null ? releaseWakeLock() : requestWakeLock());
 
     document.addEventListener('visibilitychange', () => {
@@ -364,60 +349,40 @@ tabBtns.forEach(btn => {
         if (state.isRunning) {
             state.accumulatedTime += now - state.startTime;
             state.isRunning = false;
-            els.btnStart.textContent = "Start";
-            els.btnStart.classList.add("primary");
+            els.btnStart.textContent = "Start"; els.btnStart.classList.add("primary");
             cancelAnimationFrame(animationFrameId);
             releaseWakeLock();
         } else {
-            if (!state.baseShowTime && state.accumulatedTime === 0) {
-                state.baseShowTime = now;
-                updateBaseTimeDisplay();
-            }
-            state.startTime = now;
-            state.isRunning = true;
-            els.btnStart.textContent = "Stop";
-            els.btnStart.classList.remove("primary");
-            requestWakeLock();
-            updateTime();
+            if (!state.baseShowTime && state.accumulatedTime === 0) { state.baseShowTime = now; updateBaseTimeDisplay(); }
+            state.startTime = now; state.isRunning = true;
+            els.btnStart.textContent = "Stop"; els.btnStart.classList.remove("primary");
+            requestWakeLock(); updateTime();
         }
         saveState();
     });
 
     els.btnLap.addEventListener('click', () => {
         const lapData = {
-            id: Date.now(),
-            number: state.laps.length + 1,
+            id: Date.now(), number: state.laps.length + 1,
             elapsed: state.isRunning ? state.accumulatedTime + (Date.now() - state.startTime) : state.accumulatedTime,
-            realTime: formatRealTime(new Date()),
-            memo: ""
+            realTime: formatRealTime(new Date()), memo: ""
         };
-        state.laps.push(lapData);
-        saveState();
-        appendLapToDOM(lapData);
+        state.laps.push(lapData); saveState(); appendLapToDOM(lapData);
     });
 
     els.btnReset.addEventListener('click', () => {
         if (confirm("記録をすべてリセットしますか？")) {
             state = { isRunning: false, startTime: 0, accumulatedTime: 0, baseShowTime: null, laps: [] };
             updateBaseTimeDisplay();
-            els.btnStart.textContent = "Start";
-            els.btnStart.classList.add("primary");
-            cancelAnimationFrame(animationFrameId);
-            renderTime(0);
-            els.lapList.innerHTML = '';
-            saveState();
-            releaseWakeLock();
+            els.btnStart.textContent = "Start"; els.btnStart.classList.add("primary");
+            cancelAnimationFrame(animationFrameId); renderTime(0); els.lapList.innerHTML = '';
+            saveState(); releaseWakeLock();
         }
     });
 
-    function renderLaps() {
-        els.lapList.innerHTML = '';
-        state.laps.forEach(appendLapToDOM);
-    }
-
+    function renderLaps() { els.lapList.innerHTML = ''; state.laps.forEach(appendLapToDOM); }
     function appendLapToDOM(lap) {
-        const li = document.createElement('li');
-        li.className = 'sw-lap-item';
+        const li = document.createElement('li'); li.className = 'sw-lap-item';
         li.innerHTML = `<span>#${lap.number}</span><span>${formatTime(lap.elapsed)}</span><span style="color:#aaa;">${lap.realTime}</span><input type="text" placeholder="メモ..." value="${lap.memo}">`;
         els.lapList.prepend(li);
         li.querySelector('input').addEventListener('input', (e) => {
@@ -432,8 +397,7 @@ tabBtns.forEach(btn => {
         state.laps.forEach(l => csv += `${l.number},${formatTime(l.elapsed)},${l.realTime},"${l.memo.replace(/"/g, '""')}"\n`);
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' }));
-        a.download = `stage_record_${formatRealTime().replace(/:/g, '')}.csv`;
-        a.click();
+        a.download = `stage_record_${formatRealTime().replace(/:/g, '')}.csv`; a.click();
     });
 
     init();
@@ -441,7 +405,7 @@ tabBtns.forEach(btn => {
 
 
 // ==========================================
-// アプリ2: バータイマー ロジック
+// アプリ2: バータイマー ロジック (Flatpickr・通知・相対時間 復元)
 // ==========================================
 (() => {
     const els = {
@@ -455,48 +419,75 @@ tabBtns.forEach(btn => {
         mainBtn: document.getElementById('bt-mainBtn'),
         btnStartNow: document.getElementById('bt-btn-start-now'),
         btnClearAll: document.getElementById('bt-btn-clear-all'),
-        btnAddTime: document.getElementById('bt-btn-add-time')
+        btnAddEmpty: document.getElementById('bt-btn-add-empty'),
+        btnAddRel: document.getElementById('bt-btn-add-rel'),
+        relMinsInput: document.getElementById('bt-relMins')
     };
 
     let isRunning = false;
     let wakeLock = null;
+    let lastNotifiedIndex = null; // 通知機能用
 
+    // --- 消灯防止 ---
     async function requestWakeLock() {
         if (!('wakeLock' in navigator) || wakeLock !== null) return;
         try {
             wakeLock = await navigator.wakeLock.request('screen');
-            els.wakeLockDot.classList.add('active');
-            els.btnWakeLock.classList.add('active-lock');
+            els.wakeLockDot.classList.add('active'); els.btnWakeLock.classList.add('active-lock');
             wakeLock.addEventListener('release', () => {
-                els.wakeLockDot.classList.remove('active');
-                els.btnWakeLock.classList.remove('active-lock');
+                els.wakeLockDot.classList.remove('active'); els.btnWakeLock.classList.remove('active-lock');
                 wakeLock = null;
             });
         } catch (err) { console.warn('BT Wake Lock error:', err); }
     }
+    function releaseWakeLock() { if (wakeLock !== null) { wakeLock.release(); wakeLock = null; } }
+    els.btnWakeLock.addEventListener('click', () => wakeLock !== null ? releaseWakeLock() : requestWakeLock());
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && isRunning) requestWakeLock(); });
 
-    function releaseWakeLock() {
-        if (wakeLock !== null) { wakeLock.release(); wakeLock = null; }
+    // --- 通知許可 ---
+    function requestNotificationPermission() {
+        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+    }
+    function sendNotification(title, body) {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(title, { body: body });
+        }
     }
 
-    els.btnWakeLock.addEventListener('click', () => wakeLock !== null ? releaseWakeLock() : requestWakeLock());
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && isRunning) requestWakeLock();
-    });
-
+    // --- データ保存・展開 ---
     function saveData() {
         const inputs = Array.from(els.container.querySelectorAll('.target-time')).map(i => i.value);
         localStorage.setItem('barTimerSchedule', JSON.stringify(inputs));
     }
 
+    // 復元：flatpickrを初期化してインプットを追加
     function addInput(value) {
         const div = document.createElement('div');
         div.className = 'bt-time-row';
-        div.innerHTML = `<input type="time" class="target-time" value="${value}"> <button class="bt-btn-del">×</button>`;
-        div.querySelector('.bt-btn-del').addEventListener('click', () => { div.remove(); saveData(); });
-        div.querySelector('input').addEventListener('change', saveData);
+        div.innerHTML = `<input type="text" class="target-time" value="${value}" readonly placeholder="--:--"> <button class="bt-btn-del">×</button>`;
+        
+        const input = div.querySelector('input');
+        const btnDel = div.querySelector('.bt-btn-del');
+
+        btnDel.addEventListener('click', () => { 
+            if (input._flatpickr) input._flatpickr.destroy();
+            div.remove(); 
+            saveData(); 
+        });
+
         els.container.appendChild(div);
+
+        flatpickr(input, {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            disableMobile: true, // スマホ標準UIを回避する設定
+            onChange: function() { saveData(); }
+        });
+        
         saveData();
     }
 
@@ -510,31 +501,86 @@ tabBtns.forEach(btn => {
         addInput('23:00'); addInput('01:00');
     }
 
+    // --- 各種ボタンイベント ---
     els.btnClearAll.addEventListener('click', () => {
         if (confirm("設定した時刻をすべて消去しますか？")) {
-            els.container.innerHTML = ''; addInput(''); saveData();
+            els.container.querySelectorAll('.target-time').forEach(input => {
+                if (input._flatpickr) input._flatpickr.destroy();
+            });
+            els.container.innerHTML = ''; 
+            addInput(''); 
+            saveData();
         }
     });
 
-    els.btnAddTime.addEventListener('click', () => addInput(''));
+    els.btnAddEmpty.addEventListener('click', () => addInput(''));
+
+    // 復元：相対時間（〇〇分後）の追加ロジック
+    els.btnAddRel.addEventListener('click', () => {
+        const min = parseInt(els.relMinsInput.value) || 0;
+        if (min <= 0) return;
+
+        const inputs = Array.from(els.container.querySelectorAll('.target-time'));
+        let baseDate = new Date();
+
+        const lastFilled = [...inputs].reverse().find(input => input.value !== "");
+        
+        if (lastFilled) {
+            const [h, m] = lastFilled.value.split(':').map(Number);
+            baseDate.setHours(h, m, 0, 0);
+        } else {
+            const nowH = String(baseDate.getHours()).padStart(2, '0');
+            const nowM = String(baseDate.getMinutes()).padStart(2, '0');
+            const firstEmpty = inputs.find(i => i.value === "");
+            if (firstEmpty) {
+                firstEmpty._flatpickr.setDate(`${nowH}:${nowM}`);
+            } else {
+                addInput(`${nowH}:${nowM}`);
+            }
+        }
+
+        baseDate.setMinutes(baseDate.getMinutes() + min);
+        const newH = String(baseDate.getHours()).padStart(2, '0');
+        const newM = String(baseDate.getMinutes()).padStart(2, '0');
+        const targetTime = `${newH}:${newM}`;
+
+        const updatedInputs = Array.from(els.container.querySelectorAll('.target-time'));
+        const emptyInput = updatedInputs.find(i => i.value === "");
+        
+        if (emptyInput) {
+            emptyInput._flatpickr.setDate(targetTime);
+        } else {
+            addInput(targetTime);
+        }
+        
+        saveData();
+    });
 
     els.btnStartNow.addEventListener('click', () => {
         const now = new Date();
         if (els.container.children.length === 0) addInput('');
-        els.container.querySelector('.target-time').value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        
+        const firstInput = els.container.querySelector('.target-time');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        firstInput._flatpickr.setDate(`${hh}:${mm}`);
+        
         saveData();
         if (!isRunning) setTimerState(true);
     });
 
     function setTimerState(state) {
+        requestNotificationPermission(); // 開始時に通知許可をリクエスト
         isRunning = state;
-        els.mainBtn.textContent = isRunning ? "ストップ" : "タイマースタート";
+        els.mainBtn.textContent = isRunning ? "ストップ" : "スタート";
         els.mainBtn.style.background = isRunning ? "#e67e22" : "#27ae60";
+        if (isRunning) lastNotifiedIndex = null;
         isRunning ? requestWakeLock() : releaseWakeLock();
     }
 
     els.mainBtn.addEventListener('click', () => setTimerState(!isRunning));
 
+    // --- メインループ ---
     function updateTime() {
         const now = new Date();
         els.currentTime.textContent = `現在時刻: ${now.toLocaleTimeString()}`;
@@ -578,10 +624,18 @@ tabBtns.forEach(btn => {
         if (currentIndex !== -1) {
             const start = schedule[currentIndex].time.getTime(), end = schedule[currentIndex+1].time.getTime();
             const remainingMs = end - nowTime;
+            
             els.progressBar.style.width = `${(remainingMs / (end - start)) * 100}%`;
             els.status.textContent = `${schedule[currentIndex].value} 〜 ${schedule[currentIndex+1].value}`;
             schedule[currentIndex].element.classList.add('bt-active-row');
             els.countdown.textContent = `${String(Math.floor(remainingMs / 60000)).padStart(2, '0')}:${String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0')}`;
+
+            // 復元：切り替わり時のプッシュ通知
+            if (lastNotifiedIndex !== null && lastNotifiedIndex !== currentIndex) {
+                sendNotification("次の予定です", `${schedule[currentIndex].value} 〜 ${schedule[currentIndex+1].value} が始まりました。`);
+            }
+            lastNotifiedIndex = currentIndex;
+
         } else if (nowTime < schedule[0].time.getTime()) {
             els.status.textContent = "開始時刻を待っています...";
             els.progressBar.style.width = '100%';
@@ -590,6 +644,13 @@ tabBtns.forEach(btn => {
             els.status.textContent = "すべての予定が終了しました";
             els.progressBar.style.width = '0%';
             els.countdown.textContent = "00:00";
+            
+            // 復元：終了時のプッシュ通知
+            if (lastNotifiedIndex !== 'finished') {
+                sendNotification("終了しました", "すべての予定スケジュールが完了しました。");
+                lastNotifiedIndex = 'finished';
+            }
+
             if (isRunning) setTimerState(false);
         }
     }
